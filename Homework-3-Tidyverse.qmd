@@ -1,0 +1,102 @@
+---
+title: "Homework-3-Tidyverse"
+format: pdf
+editor: visual
+---
+
+## Task 1
+### Question a
+
+We cannot directly use the read_csv() function because data.txt is delimited by semicolons and not commas. Instead, we can use read_csv2().
+
+```{r}
+#| warning: false
+library(tidyverse)
+library(palmerpenguins)
+
+data <- read_csv2("C:/Users/ZRose/Desktop/Skewl/ST_558/Homework3/data/data.txt")
+data
+```
+
+### Question b
+```{r}
+data2 <- read_delim("C:/Users/ZRose/Desktop/Skewl/ST_558/Homework3/data/data2.txt",
+                    delim = "6", col_types = "fdc")
+data2
+```
+
+## Task 2
+### Question a
+```{r}
+#| warning: false
+trailblazer <- read_csv(
+  "C:/Users/ZRose/Desktop/Skewl/ST_558/Homework3/data/trailblazer.csv"
+)
+glimpse(trailblazer)
+```
+
+### Question b
+```{r}
+trailblazer_longer <- trailblazer |>
+  pivot_longer(
+    cols = starts_with("Game"),
+    names_to = "GameLabel",
+    values_to = "Points"
+  ) |>
+  separate_wider_delim(
+    cols = GameLabel,
+    delim = "_",
+    names = c("Game", "Location")
+  )
+
+head(trailblazer_longer, 5)
+```
+
+### Question c
+```{r}
+trailblazer_longer |>
+  pivot_wider(
+    names_from = Location,
+    values_from = Points
+  ) |>
+  group_by(Player) |>
+  summarise(
+    mean_home = mean(Home, na.rm = TRUE),
+    mean_away = mean(Away, na.rm = TRUE),
+    diff_home_away = mean_home - mean_away
+  ) |>
+  arrange(desc(diff_home_away))
+```
+On average, Jusuf Nurkic, Robert Covington, Nassir Little, Damian Lillard, and
+Cody Zeller scored more points at home through the first 10 games of the season
+than away.
+
+## Task 3
+### Question a
+Species and island aren't unique identifiers for each row.  This is because there can
+be multiple penguins of the same species on each island.  Some entries are $<\mbox{NULL}>$
+because there aren't any values for that combination of species and island.  Some
+values are like $<\mbox{dbl [52]}>$ because there are many values for that combination
+of species and island (52 of them).  The way these combinations are selected results in
+a list of doubles.  We see that the columns are $<\mbox{list}>$ as they contain a list
+of bill length values rather than a single value.
+
+### Question b
+```{r}
+penguins |>
+  group_by(species, island) |>
+  summarise(n = as.double(n())) |>
+  pivot_wider(names_from = island, values_from = n, values_fill = 0)
+```
+
+## Task 4
+```{r}
+penguins |>
+  mutate(bill_length_mm = case_when(
+    is.na(bill_length_mm) & species == "Adelie" ~ 26,
+    is.na(bill_length_mm) & species == "Gentoo" ~ 30,
+    TRUE ~ bill_length_mm
+  )) |>
+  arrange(bill_length_mm) |>
+  slice_head(n = 10)
+```
